@@ -1,0 +1,9 @@
+nazwa,stała,wartość,jednostka,źródło
+współczynnik przewodnictwa cieplnego,alfa,0.000019,m^2/s,https://www.electronics-cooling.com/2007/08/thermal-diffusivity/
+ciśnienie,p,1013,hPa,https://pl.wikipedia.org/wiki/Ci%C5%9Bnienie_atmosferyczne
+indywidualna stała gazowa,r,287.05,J/(kg*K),https://pl.wikipedia.org/wiki/Sta%C5%82a_gazowa#Indywidualna_sta%C5%82a_gazowa
+ciepło właściwe powietrza,c,1005,J/(kg*K),"http://www.fizykon.org/termodynamika/trmdn_9_cieplo_wlasciwe.htm#:~:text=Table_title:%20Warto%C5%9Bci%20ciep%C5%82a%20w%C5%82a%C5%9Bciwego%20niekt%C3%B3rych%20substancji%20Table_content:,%7C%20Ciep%C5%82o%20w%C5%82a%C5%9Bciwe%20w%20J/kgK:%202100%20%7C"
+współczynnik przenikania ciepła przez ściany,lambda_wall,0.17,J/(s*m*k),https://www.engineeringtoolbox.com/thermal-conductivity-d_429.html
+współczynnik przenikania ciepła przez okna,lambda_window,0.96,J/(s*m*k),https://www.engineeringtoolbox.com/thermal-conductivity-d_429.html
+współczynnik przenikania ciepła przez powietrze,lambda_air,0.0262,J/(s*m*k),https://www.engineeringtoolbox.com/air-properties-viscosity-conductivity-heat-capacity-d_1509.html
+moc grzejnika,P,1267,J/s,https://ezelazny.pl/blog/post/grzejniki-perfekt-tabela-mocy
