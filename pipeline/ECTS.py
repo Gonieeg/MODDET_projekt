@@ -23,8 +23,13 @@ class ETCS:
     def D1B(N):
         return -np.eye(N, k=-1) + np.eye(N)
 
-    def ustaw_warunki(self, ht):
-        """Warunki p"""
+    @staticmethod
+    def f(x, y):
+        """Warunek początkowy"""
+        return np.exp(- (x + 1) ** 2 - (y + 1) ** 2)
+
+    def symuluj_dla(self, ht):
+        """Symulacja dla danego ht, t obrotów pętli i zapisanie do self.wyniki"""
 
         self.ht = ht
 
@@ -82,13 +87,8 @@ class ETCS:
 
         self.u_0 = self.f(self.X, self.Y).flatten()
 
-    @staticmethod
-    def f(x, y):
-        """Warunek początkowy"""
-        return np.exp(- (x + 1) ** 2 - (y + 1) ** 2)
+        ### SYMULACJA
 
-    def symuluj(self):
-        """Symuluje t obrotów pętli i zapisuje je w self.wyniki"""
         self.wyniki = {}
         epsilony = [0, 0.01, 0.1]
         mask_eps = (np.isclose(self.Xf[self.indeksyL], 0.1)) & (np.isclose(self.Yf[self.indeksyL], 0.1))
@@ -138,10 +138,7 @@ class ETCS:
         plt.show()
 
 
-#from klasy.ETCS import ETCS  # jeśli folder klasy to 'klasy'
-
 sim = ETCS()
 sim.start(T=10, n=1, od=-1, do=1)
-sim.ustaw_warunki(ht=1)
-sim.symuluj()
+sim.symuluj_dla(ht=1)
 sim.wykresy()
