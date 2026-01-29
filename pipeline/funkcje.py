@@ -14,15 +14,15 @@ temp_outside = 10
 # t jako argument?
 # funkcja grzejnika
 
-def room_area(ind_room):
+def room_area(x, y):
     ## A=b*c tylko jak to wziac po indeksach pokoju
     return (x[-1]-x[0]) * (y[-1]-y[0])
 
-
-def f(room, u, ust_grzalki, tc): # albo room zamiast x,y? indeksy pokoju
-    A = room_area(room)
+# kazdy pokoj to osobna macierz
+def f(X, Y, u, ust_grzalki, tc): # albo room zamiast x,y? indeksy pokoju
+    A = room_area(X, Y)
     Si = S[ust_grzalki]
-    if  np.mean(u[room]) <= Si:
+    if  np.mean(u) <= Si:
         return u * P * r / (ro * A * c)
 
 
@@ -52,4 +52,21 @@ def g(window, u):
 
 
 def start_condition(x, y):
-    ... # jakies 20 stopni wszedzie
+    return np.full_like(x, 20.0)
+
+
+# macierz dyskretyzująca drugie pochodne
+def D2(N):
+  D2 = -2 * np.eye(N) + np.eye(N, k=1) + np.eye(N, k=-1)
+  return D2
+
+# macierz dyskretyzująca pierwsze pochodne backward (prawo/góra)
+def D1B(N):
+  D1 = -np.eye(N, k=-1) + np.eye(N)
+  return D1
+
+# macierz dyskretyzująca pierwsze pochodne forward (lewo/dół)
+def D1F(N): # MOZE BYC ZLE
+  D1 = np.eye(N, k=+1) - np.eye(N)
+  return D1
+
