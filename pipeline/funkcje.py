@@ -14,11 +14,25 @@ temp_outside = 10
 # t jako argument?
 # funkcja grzejnika
 
+def room_area(ind_room):
+    ## A=b*c tylko jak to wziac po indeksach pokoju
+    return (x[-1]-x[0]) * (y[-1]-y[0])
+
+
 def f(room, u, ust_grzalki, tc): # albo room zamiast x,y? indeksy pokoju
-    A = powierzchnia_pokoju(room)
+    A = room_area(room)
     Si = S[ust_grzalki]
     if  np.mean(u[room]) <= Si:
         return u * P * r / (ro * A * c)
+
+
+def przesuniecie_grzejnika(r=0.1): # d - odleglosc od okna in [0.1, 0.2, ..., 3.9]
+    # przy zalozeniu ze hx, hy sa co 0.1?
+    # metr dlugosci
+    # powinien byc 0.1m width
+    # 3.9, 3.8, ...., 0.2, 0.1
+    ind_heater = np.where((Yf == 4 - r) & (Xf >= 1.5) & (Xf <= 2.5))[0]
+    return ind_heater
 
 
 # ściany zewnętrzne

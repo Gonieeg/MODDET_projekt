@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 #### Próba #1 dla przetestowania i zrozumienia struktury projektu - klasa estymująca utworzona z poprzedniej listy
 
-class ETCS:
+class EulerImplicit:
     def start(self, T, n, od, do, alfa=1):
         self.T = T
         self.n = n
@@ -72,7 +72,7 @@ class ETCS:
         A[ind_brzeg_y_top, :] = Cy_top[ind_brzeg_y_top, :]
         A[ind_brzeg_x_pion, :] = Cx_right[ind_brzeg_x_pion, :]
 
-        # Dirichleta
+        # Dirichlet
         N = self.Nx * self.Ny
         Id = np.eye(N)
         A[ind_dirichlet, :] = Id[ind_dirichlet, :]
@@ -138,7 +138,7 @@ class ETCS:
         plt.show()
 
 
-sim = ETCS()
+sim = EulerImplicit()
 sim.start(T=10, n=1, od=-1, do=1)
 sim.symuluj_dla(ht=1)
 sim.wykresy()

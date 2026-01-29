@@ -14,6 +14,7 @@ import numpy as np
 lx = alfa * ht/hx**2
 ly = alfa * ht/hy**2
 
+
 for i in range(t):
 
 
