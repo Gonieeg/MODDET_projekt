@@ -1,5 +1,6 @@
 import numpy as np
-import funkcje
+import matplotlib.pyplot as plt
+#import funkcje
 
 # macierz dyskretyzująca drugie pochodne
 def D2(N):
@@ -27,13 +28,13 @@ lambda_window=0.96
 lambda_air=0.0262
 P=1267
 
-S = [7, 16, 20, 24, 28]
+#S = [7, 16, 20, 24, 28]
 temp_outside = 10
 ######
 
 
 ht = 1
-T = 1
+T = 2
 t = int(T/ht)
 
 n = 1
@@ -128,12 +129,19 @@ def f(grzejnik, u, ust_grzalki=0, tc=0):  # albo room zamiast x,y? indeksy pokoj
 u_0 = np.full_like(X, 20.0).flatten()
 u_current = u_0.copy()
 
+u_0 += ht * f(ind_grzejnik, u_0) # zmodyfikowac f zeby bralo koordy grzejnika albo
+  #u_current[ind_grzejnik] += ht * f(x, u_current)
+
+  # warunki brzegowe
+u_0[ind_scian] = lambda_wall / lambda_air * temp_outside
+u_0[ind_okno] = lambda_wall / lambda_air * temp_outside
+
+print(lambda_wall / lambda_air * temp_outside)
+
 for _ in range(t):
   # równanie du/dt
   u_current += ht * f(ind_grzejnik, u_current) # zmodyfikowac f zeby bralo koordy grzejnika albo
   #u_current[ind_grzejnik] += ht * f(x, u_current)
-  # chyba bardziej przyszlosciowo jest w funkcji? dac tam u[grzejnik]
-
 
   # warunki brzegowe
   u_current[ind_scian] = lambda_wall / lambda_air * temp_outside
@@ -142,4 +150,26 @@ for _ in range(t):
   # krok symulacji
   u_current = np.linalg.solve(A, u_current)
 
+
+u_0.mean()
+u_current.max()
+
+fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+
+levels0 = np.linspace(0, 65, 50)
+
+z_min = u_current.min()
+z_max = u_current.max()
+levels = np.linspace(z_min, z_max, 50)
+
+im1 = axs[0].contourf(X, Y, u_0.reshape(Nx, Ny), levels=levels0, cmap='viridis')
+axs[0].set_title('Warunek początkowy')
+fig.colorbar(im1, ax=axs[0], ticks=np.linspace(0, 30, 6))
+
+im2 = axs[1].contourf(X, Y, u_current.reshape(Nx, Ny), levels=levels, cmap='viridis')
+axs[1].set_title('Wynik końcowy')
+fig.colorbar(im2, ax=axs[1], ticks=np.linspace(z_min, z_max, 6))
+
+plt.tight_layout()
+plt.show()
 
