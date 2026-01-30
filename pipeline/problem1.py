@@ -2,39 +2,49 @@ import numpy as np
 import matplotlib.pyplot as plt
 #import funkcje
 
-# macierz dyskretyzująca drugie pochodne
+def Kel(Cel):
+  """Przekształca stopnie Celsjusza na stopnie Kelvina"""
+  return Cel + 273.15
+
+def Cel(Kel):
+  """Przekształca stopnie Kelvina na stopnie Celsjusza"""
+  return Kel - 273.15
+
+
 def D2(N):
+  """Macierz dyskretyzująca drugie pochodne"""
   D2 = -2 * np.eye(N) + np.eye(N, k=1) + np.eye(N, k=-1)
   return D2
 
-# macierz dyskretyzująca pierwsze pochodne backward (prawo/góra)
 def D1B(N):
+  """Macierz dyskretyzująca pierwsze pochodne 'backward' (do kierunków północ N, wschód E)"""
   D1 = -np.eye(N, k=-1) + np.eye(N)
   return D1
 
-# macierz dyskretyzująca pierwsze pochodne forward (lewo/dół)
+
 def D1F(N): # MOZE BYC ZLE
+  """Macierz dyskretyzująca pierwsze pochodne 'forward' (kierunki południowy S, zachodni W)"""
   D1 = np.eye(N, k=+1) - np.eye(N)
   return D1
 
 
 ######
 alfa=0.000019
-ro=1013
+p=1013
 r=287.05
 c=1005
-lambda_wall=0.17
-lambda_window=0.96
+lambda_wall=  0.17 / 0.25#0.3/0.25
+lambda_window= 0.96 / 0.005 #1.1/0.005  # nie moge mnozyc przez grubosc bo wtedy wieksze i bardziej mrozace jest wall
 lambda_air=0.0262
 P=1267
 
 #S = [7, 16, 20, 24, 28]
-temp_outside = 10
+temp_outside = Kel(10)
 ######
 
 
-ht = 1
-T = 2
+ht = 0.1
+T = 10
 t = int(T/ht)
 
 n = 1
@@ -62,8 +72,8 @@ D2x, D2y = D2(Nx), D2(Ny)
 
 
 laplacian = np.kron(id_Ny, D2x) / hx**2 + np.kron(D2y, id_Nx) / hy**2 # sprawdzic w poprzednihc czy taka kolejnosc arguemntow kron
-
-factor = 1 * ht #alfa tu
+#alfa = 1
+factor = alfa * ht #alfa realistycznie jest mala i prawie sie nie zmienia powietrze (ale przez to rysunek sie praktycznie nie zmienia!!)
 
 A = Id - factor * laplacian
 #b = u^n + ht * f(x, u^n)
@@ -75,7 +85,7 @@ ind_okno = np.where((Yf == y[-1]) & (Xf >= 1) & (Xf <= 3))[0]
 
 #ideksy ścian pokoju 1 - bez okna
 #ind_wall = np.where((Xf == od) | (Xf == do) | (Yf == od) | (Yf == do) & ~((Xf >= 1) & (Xf <= 3)))[0]
-ind_sciany_N = np.where((Xf == do) & ~((Xf >= 1) & (Xf <= 3)))[0] # bez okna
+ind_sciany_N = np.where((Yf == do) & ~((Xf >= 1) & (Xf <= 3)))[0] # bez okna
 ind_sciany_S = np.where((Yf == od))[0]
 ind_sciany_E = np.where((Xf == do))[0]
 ind_sciany_W = np.where((Xf == od))[0]
@@ -87,16 +97,16 @@ ind_scian = np.concatenate([ind_sciany_N, ind_sciany_E, ind_sciany_S, ind_sciany
 
 # macierze zadające warunki brzegowe (każda ściana ma swój)(okno ma swój)
 ### kolejnosc kron?
-BsW = np.kron(id_Ny, D1F(Nx)) + lambda_wall/lambda_air * Id
-BsS = np.kron(D1F(Ny), id_Nx) + lambda_wall/lambda_air * Id
-BsE = np.kron(id_Ny, D1B(Nx)) + lambda_wall/lambda_air * Id
-BsN = np.kron(D1B(Ny), id_Nx) + lambda_wall/lambda_air * Id
-BoknoB = np.kron(D1B(Ny), id_Nx) + lambda_window/lambda_air * Id #okno
+BsW = np.kron(id_Ny, D1F(Nx)) / hx + lambda_wall/lambda_air * Id
+BsS = np.kron(D1F(Ny), id_Nx) / hy + lambda_wall/lambda_air * Id
+BsE = np.kron(id_Ny, D1B(Nx)) / hx + lambda_wall/lambda_air * Id
+BsN = np.kron(D1B(Ny), id_Nx) / hy + lambda_wall/lambda_air * Id
+BoknoB = np.kron(D1B(Ny), id_Nx) / hy + lambda_window/lambda_air * Id #okno
 
 A[ind_sciany_N, :] = BsN[ind_sciany_N, :]
-A[ind_sciany_E, :] = BsN[ind_sciany_E, :]
-A[ind_sciany_S, :] = BsN[ind_sciany_S, :]
-A[ind_sciany_W, :] = BsN[ind_sciany_W, :]
+A[ind_sciany_E, :] = BsE[ind_sciany_E, :]
+A[ind_sciany_S, :] = BsS[ind_sciany_S, :]
+A[ind_sciany_W, :] = BsW[ind_sciany_W, :]
 A[ind_okno, :] = BoknoB[ind_okno, :]
 
 
@@ -105,20 +115,24 @@ A[ind_okno, :] = BoknoB[ind_okno, :]
 
 # przed petla liczaca
 # grzejnik 0.1
-ind_grzejnik = np.where((Yf == 4 - r) & (Xf >= 1.5) & (Xf <= 2.5))[0]
+odleglosc = 0.1
+ind_grzejnik = np.where((Yf == 4 - odleglosc) & (Xf >= 1.5) & (Xf <= 2.5))[0]
 # odleglosci grzejnika od okna w metrach
 rs = [0.1, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 3.9]
 
-# ustawienia grzałki ZINENIC I TO NA KELWINY CHYBA STARTOWA TEMPERATURE TEZ!!
+# ustawienia grzałki ZINENIC
 S = {0: 7, 1: 16, 2: 20, 3: 24, 4: 28}
+for k in S: # na kelwiny
+    S[k] = Kel(S[k])
 
-
+# na razie nie jest wprowadzone
 def f(grzejnik, u, ust_grzalki=0, tc=0):  # albo room zamiast x,y? indeksy pokoju
+  """Funkcja implementująca działanie grzejnika"""
   A = 4*4
   #Si = S[ust_grzalki]
 
   u_n = np.zeros_like(u)
-  nu = P * r / (ro * A * c)
+  nu = P * r / (p * A * c)
 
   if np.mean(u) <= 20: #Si:
     # tylko tam gdzie grzejnik robic to dzialanie
@@ -126,7 +140,7 @@ def f(grzejnik, u, ust_grzalki=0, tc=0):  # albo room zamiast x,y? indeksy pokoj
   return u_n
 
 
-u_0 = np.full_like(X, 20.0).flatten()
+u_0 = np.full_like(X, Kel(20.0)).flatten()
 u_current = u_0.copy()
 
 u_0 += ht * f(ind_grzejnik, u_0) # zmodyfikowac f zeby bralo koordy grzejnika albo
@@ -134,29 +148,33 @@ u_0 += ht * f(ind_grzejnik, u_0) # zmodyfikowac f zeby bralo koordy grzejnika al
 
   # warunki brzegowe
 u_0[ind_scian] = lambda_wall / lambda_air * temp_outside
-u_0[ind_okno] = lambda_wall / lambda_air * temp_outside
+u_0[ind_okno] = lambda_window / lambda_air * temp_outside
 
 print(lambda_wall / lambda_air * temp_outside)
 
+print("mean 0: ", u_current.mean())
 for _ in range(t):
   # równanie du/dt
-  u_current += ht * f(ind_grzejnik, u_current) # zmodyfikowac f zeby bralo koordy grzejnika albo
+  #u_current += ht * f(ind_grzejnik, u_current) # zmodyfikowac f zeby bralo koordy grzejnika albo
   #u_current[ind_grzejnik] += ht * f(x, u_current)
 
   # warunki brzegowe
   u_current[ind_scian] = lambda_wall / lambda_air * temp_outside
-  u_current[ind_okno] = lambda_wall / lambda_air * temp_outside
+  u_current[ind_okno] = lambda_window / lambda_air * temp_outside # to cos sprawia ze okno grzeje? robi skrajnosc
 
   # krok symulacji
   u_current = np.linalg.solve(A, u_current)
+  print(f"mean {_+1}: ", u_current.mean())
 
 
-u_0.mean()
-u_current.max()
+#u_0.mean()
+#u_current.max()
+u_0 = Cel(u_0)
+u_current = Cel(u_current)
 
 fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 
-levels0 = np.linspace(0, 65, 50)
+levels0 = np.linspace(u_0.min(), u_0.max(), 50)
 
 z_min = u_current.min()
 z_max = u_current.max()
@@ -164,7 +182,7 @@ levels = np.linspace(z_min, z_max, 50)
 
 im1 = axs[0].contourf(X, Y, u_0.reshape(Nx, Ny), levels=levels0, cmap='viridis')
 axs[0].set_title('Warunek początkowy')
-fig.colorbar(im1, ax=axs[0], ticks=np.linspace(0, 30, 6))
+fig.colorbar(im1, ax=axs[0], ticks=np.linspace(u_0.min(), u_0.max(), 6))
 
 im2 = axs[1].contourf(X, Y, u_current.reshape(Nx, Ny), levels=levels, cmap='viridis')
 axs[1].set_title('Wynik końcowy')
