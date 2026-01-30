@@ -66,7 +66,7 @@ factor = 1 * ht #alfa tu
 
 A = Id - factor * laplacian
 #b = u^n + ht * f(x, u^n)
-b = u_current + ht * f(x, u_current) # f - farelka
+#b = u_current + ht * f(x, u_current) # f - farelka
 
 
 # indeksy okna pokoju 1 - od 1 do 3 na top ścianie
@@ -104,19 +104,42 @@ A[ind_okno, :] = BoknoB[ind_okno, :]
 
 # przed petla liczaca
 # grzejnik 0.1
-ind_heater = np.where((Yf == 4 - r) & (Xf >= 1.5) & (Xf <= 2.5))[0]
+ind_grzejnik = np.where((Yf == 4 - r) & (Xf >= 1.5) & (Xf <= 2.5))[0]
 # odleglosci grzejnika od okna w metrach
 rs = [0.1, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 3.9]
 
-u_0 = np.full_like(x, 20.0)
+# ustawienia grzałki ZINENIC I TO NA KELWINY CHYBA STARTOWA TEMPERATURE TEZ!!
+S = {0: 7, 1: 16, 2: 20, 3: 24, 4: 28}
+
+
+def f(grzejnik, u, ust_grzalki=0, tc=0):  # albo room zamiast x,y? indeksy pokoju
+  A = 4*4
+  #Si = S[ust_grzalki]
+
+  u_n = np.zeros_like(u)
+  nu = P * r / (ro * A * c)
+
+  if np.mean(u) <= 20: #Si:
+    # tylko tam gdzie grzejnik robic to dzialanie
+    u_n[grzejnik] = u[grzejnik] * nu
+  return u_n
+
+
+u_0 = np.full_like(X, 20.0).flatten()
 u_current = u_0.copy()
 
 for _ in range(t):
-  # warunki brzegowe
-  b[ind_scian] = lambda_wall / lambda_air * temp_outside
-  b[ind_okno] = lambda_wall / lambda_air * temp_outside
-
   # równanie du/dt
-  b = u_current + ht * f(x, u_current)
+  u_current += ht * f(ind_grzejnik, u_current) # zmodyfikowac f zeby bralo koordy grzejnika albo
+  #u_current[ind_grzejnik] += ht * f(x, u_current)
+  # chyba bardziej przyszlosciowo jest w funkcji? dac tam u[grzejnik]
+
+
+  # warunki brzegowe
+  u_current[ind_scian] = lambda_wall / lambda_air * temp_outside
+  u_current[ind_okno] = lambda_wall / lambda_air * temp_outside
+
+  # krok symulacji
+  u_current = np.linalg.solve(A, u_current)
 
 
