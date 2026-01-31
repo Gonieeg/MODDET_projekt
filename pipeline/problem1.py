@@ -1,31 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-#import funkcje
-
-def Kel(Cel):
-  """Przekształca stopnie Celsjusza na stopnie Kelvina"""
-  return Cel + 273.15
-
-def Cel(Kel):
-  """Przekształca stopnie Kelvina na stopnie Celsjusza"""
-  return Kel - 273.15
+from funkcje import * #Kel, Cel, D2, D1B, D1F
+# import all - zmienne tez powinny, ale spr czy cos
 
 
-def D2(N):
-  """Macierz dyskretyzująca drugie pochodne"""
-  D2 = -2 * np.eye(N) + np.eye(N, k=1) + np.eye(N, k=-1)
-  return D2
 
-def D1B(N):
-  """Macierz dyskretyzująca pierwsze pochodne 'backward' (do kierunków północ N, wschód E)"""
-  D1 = -np.eye(N, k=-1) + np.eye(N)
-  return D1
-
-
-def D1F(N): # MOZE BYC ZLE
-  """Macierz dyskretyzująca pierwsze pochodne 'forward' (kierunki południowy S, zachodni W)"""
-  D1 = np.eye(N, k=+1) - np.eye(N)
-  return D1
 
 
 ######
@@ -33,18 +12,18 @@ alfa=0.000019
 p=1013
 r=287.05
 c=1005
-lambda_wall=  0.17 / 0.25#0.3/0.25
-lambda_window= 0.96 / 0.005 #1.1/0.005  # nie moge mnozyc przez grubosc bo wtedy wieksze i bardziej mrozace jest wall
-lambda_air=0.0262
+lambda_wall =  0.17 / 0.25#0.3/0.25
+lambda_window = 0.96 / 0.005 #1.1/0.005  # nie moge mnozyc przez grubosc bo wtedy wieksze i bardziej mrozace jest wall
+lambda_air = 0.0262
 P=1267
 
 #S = [7, 16, 20, 24, 28]
-temp_outside = Kel(10)
+temp_outside = Kel(0)
 ######
 
 
 ht = 0.1
-T = 10
+T = 1000#000 # [s]
 t = int(T/ht)
 
 n = 1
@@ -72,12 +51,10 @@ D2x, D2y = D2(Nx), D2(Ny)
 
 
 laplacian = np.kron(id_Ny, D2x) / hx**2 + np.kron(D2y, id_Nx) / hy**2 # sprawdzic w poprzednihc czy taka kolejnosc arguemntow kron
-#alfa = 1
+#alfa = 0.01
 factor = alfa * ht #alfa realistycznie jest mala i prawie sie nie zmienia powietrze (ale przez to rysunek sie praktycznie nie zmienia!!)
 
 A = Id - factor * laplacian
-#b = u^n + ht * f(x, u^n)
-#b = u_current + ht * f(x, u_current) # f - farelka
 
 
 # indeksy okna pokoju 1 - od 1 do 3 na top ścianie
@@ -110,52 +87,59 @@ A[ind_sciany_W, :] = BsW[ind_sciany_W, :]
 A[ind_okno, :] = BoknoB[ind_okno, :]
 
 
-#? jak i gdzie:
-#A u^{n+1} = b^n # "na wierszach roznych od ind_brzegowe"
 
 # przed petla liczaca
-# grzejnik 0.1
-odleglosc = 0.1
-ind_grzejnik = np.where((Yf == 4 - odleglosc) & (Xf >= 1.5) & (Xf <= 2.5))[0]
+# grzejnik
+#odleglosc = 0.2
+# odleglosc nie dziala poniewaz dokladnosc floatow. stawiamy grzjnik w j-tym rzedzie a r polizcymt pozniej
+j = Ny - 2
+ind_grzejnik = np.where((Yf == y[j]) & (Xf >= 1.5) & (Xf <= 2.5))[0]
 # odleglosci grzejnika od okna w metrach
-rs = [0.1, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 3.9]
+rs = [0.1, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 3.9] #PARZYSTE Z TAKIM HX HY
 
 # ustawienia grzałki ZINENIC
-S = {0: 7, 1: 16, 2: 20, 3: 24, 4: 28}
+S = {0: 7, 1: 16, 2: 20, 3: 24, 4: 28} # w *C
 for k in S: # na kelwiny
     S[k] = Kel(S[k])
 
 # na razie nie jest wprowadzone
-def f(grzejnik, u, ust_grzalki=0, tc=0):  # albo room zamiast x,y? indeksy pokoju
+def f(grzejnik, u, ust_grzalki):  # albo room zamiast x,y? indeksy pokoju
   """Funkcja implementująca działanie grzejnika"""
-  A = 4*4
-  #Si = S[ust_grzalki]
+  Area = 4*4 # zrobic funkcje do tego w kolejnych problemach
+  Si = S[ust_grzalki]
 
   u_n = np.zeros_like(u)
-  nu = P * r / (p * A * c)
+  nu = P * r / (p * Area * c)
 
-  if np.mean(u) <= 20: #Si:
+  if np.mean(u) <= Si:
     # tylko tam gdzie grzejnik robic to dzialanie
     u_n[grzejnik] = u[grzejnik] * nu
   return u_n
 
+#print("temp termostatu graniczna:", S[4])
 
 u_0 = np.full_like(X, Kel(20.0)).flatten()
 u_current = u_0.copy()
 
-u_0 += ht * f(ind_grzejnik, u_0) # zmodyfikowac f zeby bralo koordy grzejnika albo
+u_0 += ht * f(ind_grzejnik, u_0, 4) # zmodyfikowac f zeby bralo koordy grzejnika albo
   #u_current[ind_grzejnik] += ht * f(x, u_current)
+#print(np.mean(u_0) <= S[4])
+
+#print(f(ind_grzejnik, u_0, 4))#.mean())
+#print(u_0)#.mean())
+
 
   # warunki brzegowe
 u_0[ind_scian] = lambda_wall / lambda_air * temp_outside
 u_0[ind_okno] = lambda_window / lambda_air * temp_outside
 
-print(lambda_wall / lambda_air * temp_outside)
+#print(lambda_wall / lambda_air * temp_outside)
+#print(lambda_window / lambda_air * temp_outside)
 
 print("mean 0: ", u_current.mean())
 for _ in range(t):
   # równanie du/dt
-  #u_current += ht * f(ind_grzejnik, u_current) # zmodyfikowac f zeby bralo koordy grzejnika albo
+  u_current += ht * f(ind_grzejnik, u_current, 4) # zmodyfikowac f zeby bralo koordy grzejnika albo
   #u_current[ind_grzejnik] += ht * f(x, u_current)
 
   # warunki brzegowe
@@ -175,7 +159,10 @@ u_current = Cel(u_current)
 fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 
 levels0 = np.linspace(u_0.min(), u_0.max(), 50)
-
+'''
+if Cel(temp_outside) > u_current.min():
+  print(u_current < Cel(temp_outside))
+  '''
 z_min = u_current.min()
 z_max = u_current.max()
 levels = np.linspace(z_min, z_max, 50)
