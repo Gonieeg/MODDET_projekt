@@ -3,10 +3,6 @@ import matplotlib.pyplot as plt
 from funkcje import * #Kel, Cel, D2, D1B, D1F
 # import all - zmienne tez powinny, ale spr czy cos
 
-
-
-
-
 ######
 alfa=0.000019
 p=1013
@@ -23,7 +19,7 @@ temp_outside = Kel(0)
 
 
 ht = 0.1
-T = 1000#000 # [s]
+T = 10#000 # [s]
 t = int(T/ht)
 
 n = 1
@@ -51,7 +47,7 @@ D2x, D2y = D2(Nx), D2(Ny)
 
 
 laplacian = np.kron(id_Ny, D2x) / hx**2 + np.kron(D2y, id_Nx) / hy**2 # sprawdzic w poprzednihc czy taka kolejnosc arguemntow kron
-#alfa = 0.01
+#alfa = 0.019
 factor = alfa * ht #alfa realistycznie jest mala i prawie sie nie zmienia powietrze (ale przez to rysunek sie praktycznie nie zmienia!!)
 
 A = Id - factor * laplacian
@@ -178,3 +174,7 @@ fig.colorbar(im2, ax=axs[1], ticks=np.linspace(z_min, z_max, 6))
 plt.tight_layout()
 plt.show()
 
+# Czemu okno tak mało chłodzi - mimo że ma 1000x skrajniejsze wartości?
+# Czemu grzejnik grzeje tylko tam gdzie jest i to do milionów?
+# - do milionów bo czas symulacji i wyłącza się gdy jest osiagnięta średnia - a rosnie tylko w tym miejscu
+# - rosnie tylko na grzejniku bo współczynnik dyfuzji jest malutki??
