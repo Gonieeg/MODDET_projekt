@@ -1,11 +1,20 @@
 import numpy as np
+# współczynnik dyfuzji
 alfa = 0.000019
+# ciśnienie Pa
 p = 101300
+# ind. stała gazowa powietrza
 r = 287.05
+# ciepło właściwe
 c = 1005
-lambda_wall = 0.17 #bez podzielenia przez grubosc okno spada do 2 a nie 0
-lambda_window = 0.96 # bez / spada mniej
+# współczynnik przenikania ciepła przez materiał (podzielony przez jego grubość w m)
+# breeze blocks - pustaki
+lambda_wall = 0.1/0.3
+# szyba
+lambda_window = 0.96/0.01
+# powietrze
 lambda_air = 0.0262
+# moc grzejnika
 P = 1267
 
 
@@ -36,7 +45,7 @@ def Cel(Kel):
   """Przekształca stopnie Kelvina na stopnie Celsjusza"""
   return Kel - 273.15
 
-# ustawienia grzałki ZINENIC
+# ustawienia grzałki
 S = {0: 7, 1: 16, 2: 20, 3: 24, 4: 28} # w *C
 for k in S: # na kelwiny
     S[k] = Kel(S[k])
@@ -44,7 +53,7 @@ for k in S: # na kelwiny
 
 def f(grzejnik, u, wnetrze, ust_grzalki):  # 1. gdzie dodawac cieplo 2. macierz pokoju 3. przy jakiej sredniej koniec grzania
     """Funkcja implementująca działanie grzejnika"""
-    Area = 4*4  # zrobic funkcje do tego w kolejnych problemach
+    Area = 4*4
     Si = S[ust_grzalki]
 
     u_n = np.zeros_like(u)

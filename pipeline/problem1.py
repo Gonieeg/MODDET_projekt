@@ -135,19 +135,21 @@ class Problem1:
     fig.colorbar(im1, ax=axs[0, 0])
 
     im2 = axs[0, 1].contourf(X, Y, u_current.reshape(Ny, Nx), levels=levels, cmap='viridis')
-    axs[0, 1].set_title('Wynik końcowy')
+    axs[0, 1].set_title(f'Wynik po {t} krokach')
     fig.colorbar(im2, ax=axs[0, 1])
 
     im3 = axs[1, 0].contourf(
       X, Y, u_current.reshape(Ny, Nx),
       levels=20, vmin=0, vmax=40, cmap='jet')
-    axs[1, 0].set_title('Wynik (skala stała)')
-    fig.colorbar(im3, ax=axs[1, 0], label='Temperatura [°C]')
+    axs[1, 0].set_title(f'Wynik po {t} krokach')
+    fig.colorbar(im3, ax=axs[1, 0])
 
+
+    zmianysredniej = [Cel(x) for x in zmianysredniej]
     axs[1, 1].plot(range(t), zmianysredniej)
     axs[1, 1].set_title('Średnia temperatura w czasie')
     axs[1, 1].set_xlabel('krok czasu')
-    axs[1, 1].set_ylabel('T [°C]')
+    axs[1, 1].set_ylabel('Temperatura [°C]')
 
     plt.tight_layout()
     plt.show()
@@ -155,7 +157,11 @@ class Problem1:
     return u_current
 
 
-sim1 = Problem1()
-a=sim1.symuluj(100, 1, 2, 0, 39, 4)
-print(a)
+#sim1 = Problem1()
+#a=sim1.symuluj(1000, 1, 2, 0, 2, 0)
 
+
+
+#### dodac parametr temperatury wewnetrznej?
+#### lepsze stawianie grzejnika?
+# finalnie mean i std ze scianami wlacznie powinno byc ale tbh bez scian (i moze grzejnika? bo on zawyza std tym ze bardziej sie nagrzewa zdala od okna) mowi wiecej
