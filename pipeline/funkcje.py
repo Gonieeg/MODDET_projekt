@@ -1,12 +1,17 @@
 import numpy as np
+
 # współczynnik dyfuzji
 alfa = 0.000019
+
 # ciśnienie Pa
 p = 101300
+
 # ind. stała gazowa powietrza
 r = 287.05
+
 # ciepło właściwe
 c = 1005
+
 # współczynnik przenikania ciepła przez materiał (podzielony przez jego grubość w m)
 # breeze blocks - pustaki
 lambda_wall = 0.1/0.3
@@ -14,6 +19,7 @@ lambda_wall = 0.1/0.3
 lambda_window = 0.96/0.01
 # powietrze
 lambda_air = 0.0262
+
 # moc grzejnika
 P = 1267
 
