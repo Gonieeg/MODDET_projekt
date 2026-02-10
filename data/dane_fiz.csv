@@ -6,4 +6,4 @@ ciepło właściwe powietrza,c,1005,J/(kg*K),"http://www.fizykon.org/termodynami
 współczynnik przenikania ciepła przez ściany,lambda_wall,0.1,J/(s*m*k),https://www.engineeringtoolbox.com/thermal-conductivity-d_429.html
 współczynnik przenikania ciepła przez okna,lambda_window,0.96,J/(s*m*k),https://www.engineeringtoolbox.com/thermal-conductivity-d_429.html
 współczynnik przenikania ciepła przez powietrze,lambda_air,0.0262,J/(s*m*k),https://www.engineeringtoolbox.com/air-properties-viscosity-conductivity-heat-capacity-d_1509.html
-moc grzejnika,P,1267,J/s,https://ezelazny.pl/blog/post/grzejniki-perfekt-tabela-mocy
+moc grzejnika,P,1267,W,https://ezelazny.pl/blog/post/grzejniki-perfekt-tabela-mocy

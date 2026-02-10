@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from funkcje import * #Kel, Cel, D2, D1B, D1F
-import tqdm
+#import tqdm
 
-def test2kroku(T, kroki, n, temp_outside, j, strategia):
+def test2kroku(T, kroki, n, temp_outside=0, j=2, strategia=0):
 
     # dyskretyzacja przestrzeni
     od = 0
@@ -66,7 +66,7 @@ def test2kroku(T, kroki, n, temp_outside, j, strategia):
     Dwindow = lambda_window / lambda_air * temp_outside
 
     bledy =[]
-    for ht in tqdm.tqdm(kroki):
+    for ht in kroki: #tqdm.tqdm(kroki):
         u_1 = u_0.copy()
         u_2 = u_0.copy()
 
@@ -111,18 +111,16 @@ def test2kroku(T, kroki, n, temp_outside, j, strategia):
 
         bledy.append(blad_ht / t)
 
+
+    plt.plot(nasze_kroki, np.array(bledy))
+
+    plt.title("Wykres błędu podwojonego kroku")
+    plt.xlabel("h_t")
+    plt.ylabel("log(MAE)")  # lub MAE lub RMS
+
+    plt.yscale('log')
+    plt.show()
     return bledy
 
-nasze_kroki = np.arange(0.1,20.1,0.1)
-
-osY = test2kroku(100,nasze_kroki,1,0,2,0)
-
-
-plt.plot(nasze_kroki, np.array(osY))
-
-plt.title("Wykres błędu podwojonego kroku")
-plt.xlabel("h_t")
-plt.ylabel("log(MAE)") #lub MAE lub RMS
-
-plt.yscale('log')
-plt.show()
+nasze_kroki = np.arange(0.1,10.1,0.1)
+test2kroku(20,nasze_kroki,1,0,2,0)
