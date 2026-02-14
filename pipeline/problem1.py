@@ -1,21 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from funkcje import * #Kel, Cel, D2, D1B, D1F
-# import all - zmienne tez powinny, ale spr czy cos
+from funkcje import * #Kel, Cel, D2, D1B, D1F, zmienne
+from scipy.sparse import csc_matrix
+from scipy.sparse.linalg import splu
+
 
 class Problem1:
+  """Klasa do symulacji przestrzeni 1 pomieszczenia w Problemie 1."""
 
-  #def __init__(self):
-  # importuj z dane.csv
-
-
-  def symuluj(self, T, ht, n, temp_outside, j, strategia):
-
+  def symuluj(self, T, ht, n, temp_outside, j, strategia, wykres=True):
+    """Metoda do symulacji i tworzenia wykresów. Zwraca macierz u_current, wektor zmian średniej w czasie, i końcowe odchylenie standardowe."""
     # dyskretyzacja przestrzeni
     od = 0
     do = 4
-    Nx = 20 * n + 1
-    Ny = 20 * n + 1
+    Nx = int(20 * n + 1) # int dla funkcji analizy błędu, powinno się podawać n całkowite żeby grzejnik etc się zmieścił
+    Ny = int(20 * n + 1)
     N = Nx * Ny
 
     x = np.linspace(od, do, Nx)
@@ -44,7 +43,7 @@ class Problem1:
 
     # indeksy wnętrza pokoju, do obliczania sredniej temperatury pomieszczenia - bez scian (tam gdzie startowo jest 20C)
     ind_wnetrza = np.setdiff1d(np.arange(Nx*Ny), np.concatenate([ind_scian, ind_okno]))
-
+    ind_wnetrza_bez = np.setdiff1d(ind_wnetrza, ind_grzejnik)
 
     # macierz ewolucji
     Id = np.eye(N)
@@ -56,14 +55,14 @@ class Problem1:
     A = Id - factor * laplacian
 
 
-    # implementacja warunków brzegowych
+    # Implementacja warunków brzegowych
 
     # macierze zadające warunki brzegowe
     BsW = - (np.kron(id_Ny, D1F(Nx)) / hx) + lambda_wall/lambda_air * Id
     BsS = - (np.kron(D1F(Ny), id_Nx) / hy) + lambda_wall/lambda_air * Id
     BsE = np.kron(id_Ny, D1B(Nx)) / hx + lambda_wall/lambda_air * Id
     BsN = np.kron(D1B(Ny), id_Nx) / hy + lambda_wall/lambda_air * Id
-    #okno
+    # okno
     BoknoB = np.kron(D1B(Ny), id_Nx) / hy + lambda_window/lambda_air * Id
 
     # warunki w macierzy ewolucji
@@ -73,81 +72,86 @@ class Problem1:
     A[ind_sciany_W, :] = BsW[ind_sciany_W, :]
     A[ind_okno, :] = BoknoB[ind_okno, :]
 
+    # Scipy dla ZNACZNIE szybszych obliczeń
+    A = csc_matrix(A)
+    solve_A = splu(A).solve
 
-    # warunek początkowy
+
+    # Warunek początkowy
     temp_outside = Kel(temp_outside)
     u_0 = np.full_like(X, Kel(20.0)).flatten()
     u_current = u_0.copy()
-
-
     # warunki brzegowe dla wyświetlania początkowego
     u_0[ind_scian] = lambda_wall / lambda_air * temp_outside
     u_0[ind_okno] = lambda_window / lambda_air * temp_outside
 
 
-    # pętla symulacji
+    # Pętla symulacji
     t = int(T/ht)
     zmianysredniej = []
     #print("mean 0: ", u_current[ind_wnetrza].mean())
+
     for _ in range(t):
       # równanie du/dt
       u_current += ht * f(ind_grzejnik, u_current, ind_wnetrza, strategia)
 
       # warunki brzegowe
       u_current[ind_scian] = lambda_wall / lambda_air * temp_outside
-      u_current[ind_okno] = lambda_window / lambda_air * temp_outside # zimno z okna praktycznie nie robi dyfuzji do wewnątrz
+      u_current[ind_okno] = lambda_window / lambda_air * temp_outside
 
       # krok symulacji
-      u_current = np.linalg.solve(A, u_current)
+      u_current = solve_A(u_current)
+      #u_current = np.linalg.solve(A, u_current)
       zmianysredniej.append(u_current[ind_wnetrza].mean())
 
-    print(f"mean {_+1}: ", u_current[ind_wnetrza].mean())
+    #print(f"mean {_+1}: ", u_current[ind_wnetrza].mean())
 
     odch = np.std(u_current[ind_wnetrza])
-    print(f"standard deviation:{odch} ")
+    #print(f"standard deviation:{odch} ")
 
+    zmianysredniej = [Cel(x) for x in zmianysredniej]
 
     u_0 = Cel(u_0)
     u_current = Cel(u_current).reshape(Ny, Nx)
 
-    # wykresy
-    fig, axs = plt.subplots(2, 2, figsize=(10, 8))
+    if wykres is True:
+      fig, axs = plt.subplots(2, 2, figsize=(10, 8))
 
-    levels0 = np.linspace(0, 30, 50)
-    levels = np.linspace(u_current.min(), u_current.max(), 50)
+      levels0 = np.linspace(0, 30, 50)
+      levels = np.linspace(u_current.min(), u_current.max(), 50)
 
-    im1 = axs[0, 0].contourf(X, Y, u_0.reshape(Ny, Nx), levels=levels0, cmap='viridis')
-    axs[0, 0].set_title('Warunek początkowy')
-    fig.colorbar(im1, ax=axs[0, 0])
+      im1 = axs[0, 0].contourf(X, Y, u_0.reshape(Ny, Nx), levels=levels0, cmap='viridis')
+      axs[0, 0].set_title('Warunek początkowy')
+      fig.colorbar(im1, ax=axs[0, 0])
 
-    im2 = axs[0, 1].contourf(X, Y, u_current, levels=levels, cmap='viridis')
-    axs[0, 1].set_title(f'Wynik po {t} krokach')
-    fig.colorbar(im2, ax=axs[0, 1])
+      im2 = axs[0, 1].contourf(X, Y, u_current, levels=levels, cmap='viridis')
+      axs[0, 1].set_title(f'Wynik po {t} krokach')
+      fig.colorbar(im2, ax=axs[0, 1])
 
-    im3 = axs[1, 0].contourf(
-      X, Y, u_current,
-      levels=20, vmin=0, vmax=40, cmap='jet')
-    axs[1, 0].set_title(f'Wynik po {t} krokach')
-    fig.colorbar(im3, ax=axs[1, 0])
+      im3 = axs[1, 0].contourf(
+        X, Y, u_current,
+        levels=20, vmin=0, vmax=40, cmap='jet')
+      axs[1, 0].set_title(f'Wynik po {t} krokach')
+      fig.colorbar(im3, ax=axs[1, 0])
 
 
-    zmianysredniej = [Cel(x) for x in zmianysredniej]
-    axs[1, 1].plot(range(t), zmianysredniej)
-    axs[1, 1].set_title('Średnia temperatura w czasie')
-    axs[1, 1].set_xlabel('krok czasu')
-    axs[1, 1].set_ylabel('Temperatura [°C]')
+      axs[1, 1].plot(range(len(zmianysredniej)), zmianysredniej)
+      axs[1, 1].set_title('Średnia temperatura w czasie')
+      axs[1, 1].set_xlabel('krok czasu')
+      axs[1, 1].set_ylabel('Temperatura [°C]')
 
-    plt.tight_layout()
-    plt.show()
+      plt.tight_layout()
+      plt.show()
 
     return u_current, zmianysredniej, odch
 
 
-sim1 = Problem1()
-a=sim1.symuluj(1000, 1, 2, 0, 2, 0)
+#sim1 = Problem1()
+#a=sim1.symuluj(1000, 1, 2, 0, 2, 0, wykres=True)
+#przy_scianie = sim1.symuluj(10800, 1, 2, 0, 2, 4)
+#print(a[2])
 
-
-
-#### dodac parametr temperatury wewnetrznej?
-#### lepsze stawianie grzejnika?
+#### w init pobierac stałe
+#### dodac parametr temperatury wewnetrznej
+#### lepsze stawianie grzejnika
 # finalnie mean i std ze scianami wlacznie powinno byc ale tbh bez scian (i moze grzejnika? bo on zawyza std tym ze bardziej sie nagrzewa zdala od okna) mowi wiecej

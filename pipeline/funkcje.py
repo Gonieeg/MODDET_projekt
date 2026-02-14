@@ -14,9 +14,9 @@ c = 1005
 
 # współczynnik przenikania ciepła przez materiał (podzielony przez jego grubość w m)
 # breeze blocks - pustaki
-lambda_wall = 0.1/0.3
+lambda_wall = 0.1#/0.3 m
 # szyba
-lambda_window = 0.96/0.01
+lambda_window = 0.96#/0.01 m
 # powietrze
 lambda_air = 0.0262
 
@@ -59,13 +59,13 @@ for k in S: # na kelwiny
 
 def f(grzejnik, u, wnetrze, ust_grzalki):  # 1. gdzie dodawac cieplo 2. macierz pokoju 3. przy jakiej sredniej koniec grzania
     """Funkcja implementująca działanie grzejnika"""
-    Area = 4*4
+    Area = 4*4*2
     Si = S[ust_grzalki]
 
     u_n = np.zeros_like(u)
     nu = P * r / (p * Area * c)
 
-    if np.mean(u[wnetrze]) <= Si:  # ind_wnetrza dodac do funkcji?
+    if np.mean(u[wnetrze]) <= Si:
         # tylko tam gdzie grzejnik robic to dzialanie
         u_n[grzejnik] = u[grzejnik] * nu
     return u_n

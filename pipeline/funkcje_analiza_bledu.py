@@ -7,7 +7,8 @@ from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import splu
 
 def test2kroku(T, kroki, n, temp_outside=0, j=2, strategia=0):
-
+    """Test podwajania kroku czasowego MAE (w czasie i przestrzeni)(problem 1)"""
+    # symulacja analogiczna do tej w Problemie 1 (skopiowana i zmieniona żeby liczyć co obrót pętli)
     # dyskretyzacja przestrzeni
     od = 0
     do = 4
@@ -125,7 +126,7 @@ def test2kroku(T, kroki, n, temp_outside=0, j=2, strategia=0):
 
     plt.title("Wykres błędu podwojonego kroku czasowego")
     plt.xlabel("$h_t$")
-    plt.ylabel("log(MAE)")  # lub MAE lub RMS
+    plt.ylabel("log(MAE)")
     #plt.xscale('log')
     plt.yscale('log')
     #plt.show()
@@ -136,6 +137,7 @@ def test2kroku(T, kroki, n, temp_outside=0, j=2, strategia=0):
 
 
 def test_przestrzenny(T, ht, kroki_n, temp_outside=0, j=2, strategia=0):
+    """Test błędu kroku w przestrzeni MAE (w chwili końcowej)(problem 1)."""
     wyniki = []
     sim = Problem1()
 
