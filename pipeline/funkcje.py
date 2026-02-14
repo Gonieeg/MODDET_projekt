@@ -14,9 +14,9 @@ c = 1005
 
 # współczynnik przenikania ciepła przez materiał (podzielony przez jego grubość w m)
 # breeze blocks - pustaki
-lambda_wall = 0.1#/0.3 m
+lambda_wall = 0.1/0.35
 # szyba
-lambda_window = 0.96#/0.01 m
+lambda_window = 0.96/0.01
 # powietrze
 lambda_air = 0.0262
 
