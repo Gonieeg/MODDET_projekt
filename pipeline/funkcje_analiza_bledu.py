@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from funkcje import * #Kel, Cel, D2, D1B, D1F
 from problem1 import *
 import tqdm
-from scipy.sparse import csr_matrix
+from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import splu
 
 def test2kroku(T, kroki, n, temp_outside=0, j=2, strategia=0):
@@ -69,7 +69,7 @@ def test2kroku(T, kroki, n, temp_outside=0, j=2, strategia=0):
     Dwindow = lambda_window / lambda_air * temp_outside
 
     bledy =[]
-    for ht in kroki: #tqdm.tqdm(kroki):
+    for ht in tqdm.tqdm(kroki):
         u_1 = u_0.copy()
         u_2 = u_0.copy()
 
@@ -85,8 +85,8 @@ def test2kroku(T, kroki, n, temp_outside=0, j=2, strategia=0):
             A[ind_okno, :] = BoknoB[ind_okno, :]
 
         # scipy dla szybszych obliczeń
-        A1_sparse = csr_matrix(A1)
-        A2_sparse = csr_matrix(A2)
+        A1_sparse = csc_matrix(A1)
+        A2_sparse = csc_matrix(A2)
         solve_A1 = splu(A1_sparse).solve
         solve_A2 = splu(A2_sparse).solve
 
@@ -121,14 +121,14 @@ def test2kroku(T, kroki, n, temp_outside=0, j=2, strategia=0):
         bledy.append(blad_ht / t)
 
 
-    plt.plot(kroki, np.array(bledy))
+    plt.plot(kroki, np.array(bledy), label=f"T={T}, n={n}, temp={Cel(temp_outside)}")
 
     plt.title("Wykres błędu podwojonego kroku czasowego")
     plt.xlabel("$h_t$")
     plt.ylabel("log(MAE)")  # lub MAE lub RMS
     #plt.xscale('log')
     plt.yscale('log')
-    plt.show()
+    #plt.show()
     return bledy
 
 #nasze_kroki = np.arange(0.1,10.1,0.1)
@@ -139,7 +139,7 @@ def test_przestrzenny(T, ht, kroki_n, temp_outside=0, j=2, strategia=0):
     wyniki = []
     sim = Problem1()
 
-    for n in kroki_n:
+    for n in tqdm.tqdm(kroki_n):
         #rzadsza siatka
         u_n = sim.symuluj(T, ht, n, temp_outside, j, strategia, wykres=False)[0]
         # gestsza siatka
@@ -149,11 +149,13 @@ def test_przestrzenny(T, ht, kroki_n, temp_outside=0, j=2, strategia=0):
         wyniki.append(blad)
 
     plt.title("Wykres błędu podwojonego kroku przestrzennego")
-    plt.xlabel("$h_x$ ($h_y$)")
     plt.ylabel("log(MAE)")  # lub MAE lub RMS
-    plt.plot(1 / (20 * np.array(kroki_n)), wyniki)
+    #plt.plot(1 / (20 * np.array(kroki_n)), wyniki)
+    #plt.xlabel("$h_x$ ($h_y$)")
+    plt.plot(np.array(kroki_n), wyniki)
+    plt.xlabel("n")
     plt.yscale('log')
-    plt.show()
+    #plt.show()
 
     return wyniki
 
