@@ -88,12 +88,17 @@ class Problem1:
 
     # Pętla symulacji
     t = int(T/ht)
+    # do całki liczącej zużytą energię
+    moc = 0
     zmianysredniej = []
     #print("mean 0: ", u_current[ind_wnetrza].mean())
 
     for _ in range(t):
+
       # równanie du/dt
-      u_current += ht * f(ind_grzejnik, u_current, ind_wnetrza, strategia)
+      moc_grzejnika = f(ind_grzejnik, u_current, ind_wnetrza, strategia) # wartość f()
+      u_current += ht * moc_grzejnika
+      moc += ht * (np.sum(moc_grzejnika) * hx * hy)
 
       # warunki brzegowe
       u_current[ind_scian] = lambda_wall / lambda_air * temp_outside
@@ -101,7 +106,7 @@ class Problem1:
 
       # krok symulacji
       u_current = solve_A(u_current)
-      #u_current = np.linalg.solve(A, u_current)
+
       zmianysredniej.append(u_current[ind_wnetrza].mean())
 
     #print(f"mean {_+1}: ", u_current[ind_wnetrza].mean())
@@ -143,7 +148,7 @@ class Problem1:
       plt.tight_layout()
       plt.show()
 
-    return u_current, zmianysredniej, odch
+    return u_current, zmianysredniej, odch, moc
 
 
 #sim1 = Problem1()
