@@ -1,7 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from funkcje import * #Kel, Cel, D2, D1B, D1F
-#import tqdm
+from problem1 import *
+import tqdm
+from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import splu
 
 def test2kroku(T, kroki, n, temp_outside=0, j=2, strategia=0):
 
@@ -81,6 +84,12 @@ def test2kroku(T, kroki, n, temp_outside=0, j=2, strategia=0):
             A[ind_sciany_W, :] = BsW[ind_sciany_W, :]
             A[ind_okno, :] = BoknoB[ind_okno, :]
 
+        # scipy dla szybszych obliczeń
+        A1_sparse = csr_matrix(A1)
+        A2_sparse = csr_matrix(A2)
+        solve_A1 = splu(A1_sparse).solve
+        solve_A2 = splu(A2_sparse).solve
+
         t = int(T / ht)
 
         blad_ht=0
@@ -94,8 +103,8 @@ def test2kroku(T, kroki, n, temp_outside=0, j=2, strategia=0):
             u_1[ind_okno] = Dwindow
 
             # krok symulacji
-            u_1 = np.linalg.solve(A1, u_1)
-
+            #u_1 = np.linalg.solve(A1, u_1)
+            u_1 = solve_A1(u_1)
             for i in range(2): # dla ht/2 dwa obroty pętli
                 # równanie du/dt
                 u_2 += ht/2 * f(ind_grzejnik, u_2, ind_wnetrza, strategia)
@@ -105,22 +114,50 @@ def test2kroku(T, kroki, n, temp_outside=0, j=2, strategia=0):
                 u_2[ind_okno] = Dwindow
 
                 # krok symulacji
-                u_2 = np.linalg.solve(A2, u_2)
-
+                #u_2 = np.linalg.solve(A2, u_2)
+                u_2 = solve_A2(u_2)
             blad_ht += np.mean(np.abs(u_1 - u_2))
 
         bledy.append(blad_ht / t)
 
 
-    plt.plot(nasze_kroki, np.array(bledy))
+    plt.plot(kroki, np.array(bledy))
 
-    plt.title("Wykres błędu podwojonego kroku")
-    plt.xlabel("h_t")
+    plt.title("Wykres błędu podwojonego kroku czasowego")
+    plt.xlabel("$h_t$")
     plt.ylabel("log(MAE)")  # lub MAE lub RMS
-
+    #plt.xscale('log')
     plt.yscale('log')
     plt.show()
     return bledy
 
-nasze_kroki = np.arange(0.1,10.1,0.1)
-test2kroku(20,nasze_kroki,1,0,2,0)
+#nasze_kroki = np.arange(0.1,10.1,0.1)
+#test2kroku(20,nasze_kroki,2,0,2,0)
+
+
+def test_przestrzenny(T, ht, kroki_n, temp_outside=0, j=2, strategia=0):
+    wyniki = []
+    sim = Problem1()
+
+    for n in kroki_n:
+        #rzadsza siatka
+        u_n = sim.symuluj(T, ht, n, temp_outside, j, strategia, wykres=False)[0]
+        # gestsza siatka
+        u_2n = sim.symuluj(T, ht, 2*n, temp_outside, j, strategia, wykres=False)[0]
+        u_2n_rownoliczna = u_2n.reshape(int(20*n*2+1), int(20*n*2+1))[::2, ::2]#.flatten()
+        blad = np.mean(np.abs(u_n - u_2n_rownoliczna))
+        wyniki.append(blad)
+
+    plt.title("Wykres błędu podwojonego kroku przestrzennego")
+    plt.xlabel("$h_x$ ($h_y$)")
+    plt.ylabel("log(MAE)")  # lub MAE lub RMS
+    plt.plot(1 / (20 * np.array(kroki_n)), wyniki)
+    plt.yscale('log')
+    plt.show()
+
+    return wyniki
+
+
+
+#n_list = [0.5, 1, 1.5, 2, 2.5, 3]
+#wyn = test_przestrzenny(T=4, ht=1, kroki_n=n_list)
