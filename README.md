@@ -8,5 +8,28 @@ Praktyczne zastosowania równania ciepła:
 
 Struktura repozytorium:
 
-(drzewko)
+- data/
+  
+  -- dane_fiz.csv
 
+- notebooks/
+  
+  -- analiza_bledu.ipynb
+  
+  -- problem1_eksperymenty.ipynb
+
+  -- problem1-testy.ipynb
+  
+  -- testy_implementacja1.ipynb
+  
+- pipeline/
+  
+  -- funkcje.py
+  
+  -- funkcje_analiza_bledu.py
+  
+  -- problem1.py
+  
+  -- problem2.py
+  
+- raportMG.pdf
